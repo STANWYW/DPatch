@@ -12,10 +12,10 @@ import os
 
 from PIL import Image
 import cfgs.config as cfg
-import scipy.misc 
+# import scipy.misc  # 已弃用，使用PIL替代
 import cv2
 import matplotlib.pyplot as plt
-from cStringIO import StringIO
+from io import StringIO  # Python 3中使用io.StringIO
 
 
 # save the patch as numpy
@@ -75,8 +75,8 @@ def add_patch(in_features, my_patch):
 
     img_mask = create_img_mask(in_features, patch_mask)
 
-    patch_mask = Variable(patch_mask.cuda(), requires_grad=False)
-    img_mask = Variable(img_mask.cuda(), requires_grad=False)
+    patch_mask = Variable(patch_mask, requires_grad=False)  # CPU模式
+    img_mask = Variable(img_mask, requires_grad=False)  # CPU模式
 
 
     with_patch = in_features * img_mask + my_patch * patch_mask

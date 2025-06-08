@@ -113,3 +113,12 @@ data/*
 
 VOCdevkit/*
 src/*
+dataset/
+*.jpg
+*.jpeg
+*.png
+*.npy
+*.pkl
+*.pth
+__pycache__/
+*.pyc

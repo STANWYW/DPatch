@@ -188,7 +188,11 @@ class Darknet19(nn.Module):
            self.patch = nn.Parameter(torch.rand(1,3, cfg.img_w, cfg.img_h),requires_grad=True)
         # testing
         else:
-           self.patch = cfg.patch.cuda()
+           # self.patch = cfg.patch.cuda()  # 改为CPU模式
+           if cfg.patch is not None:
+               self.patch = cfg.patch  # CPU模式
+           else:
+               self.patch = torch.rand(1,3, cfg.img_w, cfg.img_h)  # 默认随机patch
 
 
     @property
@@ -249,15 +253,15 @@ class Darknet19(nn.Module):
                                    iou_pred_np,
                                    size_index)
 
-            _boxes = net_utils.np_to_variable(_boxes)
-            _ious = net_utils.np_to_variable(_ious)
-            _classes = net_utils.np_to_variable(_classes)
+            _boxes = net_utils.np_to_variable(_boxes, is_cuda=False)
+            _ious = net_utils.np_to_variable(_ious, is_cuda=False)
+            _classes = net_utils.np_to_variable(_classes, is_cuda=False)
             box_mask = net_utils.np_to_variable(_box_mask,
-                                                dtype=torch.FloatTensor)
+                                                is_cuda=False, dtype=torch.FloatTensor)
             iou_mask = net_utils.np_to_variable(_iou_mask,
-                                                dtype=torch.FloatTensor)
+                                                is_cuda=False, dtype=torch.FloatTensor)
             class_mask = net_utils.np_to_variable(_class_mask,
-                                                  dtype=torch.FloatTensor)
+                                                  is_cuda=False, dtype=torch.FloatTensor)
 
             num_boxes = sum((len(boxes) for boxes in gt_boxes))
 

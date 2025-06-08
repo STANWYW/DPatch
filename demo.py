@@ -30,7 +30,8 @@ def preprocess(fname):
 # hyper-parameters
 # npz_fname = 'models/yolo-voc.weights.npz'
 # h5_fname = 'models/yolo-voc.weights.h5'
-trained_model = '/home/zwliu/FashionComp/adpatch/DPatch/yolo2-pytorch_backup/yolo-voc.weights.h5' #cfg.trained_model
+trained_model = 'yolo-voc.weights.h5'  # 使用项目根目录的模型文件
+# trained_model = '/home/zwliu/FashionComp/adpatch/DPatch/yolo2-pytorch_backup/yolo-voc.weights.h5' #cfg.trained_model
 # trained_model = os.path.join(
 #     cfg.train_output_dir, 'darknet19_voc07trainval_exp3_158.h5')
 thresh = 0.5
@@ -41,7 +42,7 @@ net = Darknet19()
 net_utils.load_net(trained_model, net)
 # net.load_from_npz(npz_fname)
 # net_utils.save_net(h5_fname, net)
-net.cuda()
+# net.cuda()  # 注释掉GPU模式，使用CPU避免CUDNN问题
 net.eval()
 print('load model succ...')
 
@@ -59,7 +60,7 @@ for i, (image, im_data) in enumerate(pool.imap(
     t_total.tic()
     
     im_data = net_utils.np_to_variable(
-        im_data, is_cuda=True, volatile=True).permute(0, 3, 1, 2)
+        im_data, is_cuda=False, volatile=True).permute(0, 3, 1, 2)
     t_det.tic()
     bbox_pred, iou_pred, prob_pred = net(im_data, attack=args.attack)
     det_time = t_det.toc()

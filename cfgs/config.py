@@ -99,4 +99,5 @@ print(patch_dir)
 # for testing
 patch_path = 'untargetd_DPATCH.npy'
 #patch_path = "/home/zwliu/FashionComp/adpatch/DPatch/yolo2-pytorch/trained_patch/1/untargeted_DPATCH.npy"
-patch = Variable(torch.FloatTensor(np.load(patch_path)),requires_grad=False)
+# patch = Variable(torch.FloatTensor(np.load(patch_path)),requires_grad=False)
+patch = None  # 暂时设为None，仅在测试模式需要时加载

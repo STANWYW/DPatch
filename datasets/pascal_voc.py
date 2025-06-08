@@ -11,6 +11,7 @@ import scipy.sparse
 from .imdb import ImageDataset
 from .voc_eval import voc_eval
 # from utils.yolo import preprocess_train
+import cfgs.config as cfg  # 添加cfg模块导入
 
 
 class VOCDataset(ImageDataset):

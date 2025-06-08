@@ -1,54 +1,43 @@
 import torch
 from torch.autograd import Function
-from ._ext import reorg_layer
 
-
+# 纯PyTorch实现，避免CUDA链接问题
 class ReorgFunction(Function):
-    def __init__(self, stride=2):
-        self.stride = stride
+    @staticmethod
+    def forward(ctx, x, stride):
+        ctx.stride = stride
+        batch_size, channels, height, width = x.size()
+        
+        out_height = height // stride
+        out_width = width // stride
+        out_channels = channels * stride * stride
+        
+        x = x.view(batch_size, channels, out_height, stride, out_width, stride)
+        x = x.permute(0, 1, 3, 5, 2, 4).contiguous()
+        x = x.view(batch_size, out_channels, out_height, out_width)
 
-    def forward(self, x):
-        stride = self.stride
+        return x
+    
+    @staticmethod
+    def backward(ctx, grad_output):
+        stride = ctx.stride
+        batch_size, channels, height, width = grad_output.size()
 
-        bsize, c, h, w = x.size()
-        out_w, out_h, out_c = int(w / stride), int(h / stride), c * (stride * stride)  # noqa
-        out = torch.FloatTensor(bsize, out_c, out_h, out_w)
+        out_height = height * stride
+        out_width = width * stride
+        out_channels = channels // (stride * stride)
+        
+        grad_output = grad_output.view(batch_size, out_channels, stride, stride, height, width)
+        grad_output = grad_output.permute(0, 1, 4, 2, 5, 3).contiguous()
+        grad_output = grad_output.view(batch_size, out_channels, out_height, out_width)
 
-        if x.is_cuda:
-            out = out.cuda()
-            reorg_layer.reorg_cuda(x, out_w, out_h, out_c, bsize,
-                                   stride, 0, out)
-        else:
-            reorg_layer.reorg_cpu(x, out_w, out_h, out_c, bsize,
-                                  stride, 0, out)
-
-        return out
-
-    def backward(self, grad_top):
-        stride = self.stride
-        bsize, c, h, w = grad_top.size()
-
-        out_w, out_h, out_c = w * stride, h * stride, c / (stride * stride)
-        grad_bottom = torch.FloatTensor(bsize, int(out_c), out_h, out_w)
-
-        # rev_stride = 1. / stride    # reverse
-        if grad_top.is_cuda:
-            grad_bottom = grad_bottom.cuda()
-            reorg_layer.reorg_cuda(grad_top, w, h, c, bsize,
-                                   stride, 1, grad_bottom)
-        else:
-            reorg_layer.reorg_cpu(grad_top, w, h, c, bsize,
-                                  stride, 1, grad_bottom)
-
-        return grad_bottom
+        return grad_output, None
 
 
 class ReorgLayer(torch.nn.Module):
     def __init__(self, stride):
         super(ReorgLayer, self).__init__()
-
         self.stride = stride
 
     def forward(self, x):
-        x = ReorgFunction(self.stride)(x)
-        return x
+        return ReorgFunction.apply(x, self.stride)

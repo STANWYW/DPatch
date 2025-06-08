@@ -36,7 +36,7 @@ pretrained_model = 'yolo-voc.weights.h5'
 # continue training or testing: with_patch=True
 net_utils.load_net(pretrained_model, net, with_patch=False) 
 #net.load_from_npz(cfg.pretrained_model, num_conv=18)
-net.cuda()
+# net.cuda()  # CPU模式注释掉
 net.train()
 print('load net succ...')
 
@@ -92,7 +92,7 @@ for step in range(start_epoch * imdb.batch_per_epoch,
     
     # forward
     im_data = net_utils.np_to_variable(im,
-                                       is_cuda=True,
+                                       is_cuda=False,  # CPU模式
                                        volatile=False).permute(0, 3, 1, 2)
     bbox_pred, iou_pred, prob_pred = net(im_data, gt_boxes, gt_classes, dontcare, size_index)
 
